@@ -15,13 +15,13 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        path = options['csv_file']
+        path = 'store/data/Amazon.csv'
         
         if not os.path.exists(path):
             self.stdout.write(self.style.ERROR(f'File not found: {path}'))
             return
 
-        # Словари для кэширования
+        
         brands_cache = {}
         categories_cache = {}
         sellers_cache = {}
@@ -36,7 +36,7 @@ class Command(BaseCommand):
             
             for i, row in enumerate(reader, 1):
                 if i % 100 == 0:
-                    self.stdout.write(f'Processing row {i}/{total_rows}...')
+                    self.stdout.write(f'{i}/{total_rows}')
                 
                 # 1. Customer
                 customer_id = row['CustomerID']
@@ -54,9 +54,11 @@ class Command(BaseCommand):
                 
                 # 2. Seller
                 seller_id = row['SellerID']
+                seller_name = row['SellerName']
                 if seller_id not in sellers_cache:
                     seller, created = Seller.objects.get_or_create(
-                        SellerID=seller_id
+                        SellerID=seller_id,
+                        SellerName=seller_name
                     )
                     sellers_cache[seller_id] = seller
                 
