@@ -9,6 +9,7 @@ from .models import (
 )
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_protect
 
 
 def format_currency(value):
@@ -265,7 +266,7 @@ def product_management(request):
     }
     return render(request, 'product_management.html', context)
 
-
+@csrf_protect
 def add_product(request):
     if request.method == 'POST':
         try:
@@ -300,7 +301,7 @@ def add_product(request):
     
     return redirect('store:product_management')
 
-
+@csrf_protect
 def edit_product(request, product_id):
     if request.method == 'POST':
         try:
@@ -327,7 +328,7 @@ def edit_product(request, product_id):
     
     return redirect('store:product_management')
 
-
+@csrf_protect
 def delete_product(request, product_id):
     if request.method == 'POST':
         try:
