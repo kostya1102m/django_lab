@@ -53,21 +53,21 @@ MIDDLEWARE = [
 ROOT_URLCONF = "amazonstore.urls"
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'environment': 'store.jinja2.environment',
-            'extensions': [
-                'jinja2.ext.loopcontrols',
-                'jinja2.ext.with_',
-            ],
-        },
-    },
+    # {
+    #     'BACKEND': 'django.template.backends.jinja2.Jinja2',
+    #     'DIRS': [BASE_DIR / 'templates'],
+    #     'APP_DIRS': True,
+    #     'OPTIONS': {
+    #         'environment': 'store.jinja2.environment',
+    #         'extensions': [
+    #             'jinja2.ext.loopcontrols',
+    #             'jinja2.ext.with_',
+    #         ],
+    #     },
+    # },
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -84,6 +84,10 @@ WSGI_APPLICATION = "amazonstore.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DATABASES = {
     'default': {
