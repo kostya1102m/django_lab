@@ -1,3 +1,4 @@
+0. ```git clone https://github.com/kostya1102m/django_lab``` then switch to lab2 branch
 1. ```poetry install``` or ```python -m venv .venv pip install -r requirements.txt``` (check dependencies in pyproject.toml)
 2. create .env ( for instance:
     ```POSTGRES_USER=postgres```
@@ -12,3 +13,5 @@
 6. ```python manage.py migrate```
 7. ```python manage.py extract_from_csv data/Amazon.csv```
 8. ```python manage.py runserver```
+
+NOTE: to check lab3 switch to lab3 branch
