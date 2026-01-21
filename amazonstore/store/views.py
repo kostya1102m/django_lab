@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage 
 from django.db.models import Count, Sum, Avg, Max, Min, Q
 from django.db.models.functions import TruncMonth
 from datetime import datetime
@@ -9,7 +9,7 @@ from .models import (
 )
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_protect
+from django.middleware.csrf import get_token 
 
 
 def format_currency(value):
@@ -244,39 +244,46 @@ def index(request):
 
 def product_management(request):
     search_query = request.GET.get('search', '')
-    
-    # Поиск по названию или ID продукта
+    page_number = request.GET.get('page', 1)
+
     if search_query:
-        products = Product.objects.filter(
+        products_queryset = Product.objects.filter(
             Q(ProductName__icontains=search_query) | 
             Q(ProductID__icontains=search_query)
         ).select_related('Brand', 'Category')
     else:
-        products = Product.objects.all().select_related('Brand', 'Category')
+        products_queryset = Product.objects.all().select_related('Brand', 'Category')
     
+    paginator = Paginator(products_queryset, 20)
+    
+    try:
+        products_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
     
     brands = Brand.objects.all()
     categories = Category.objects.all()
     
     context = {
-        'products': products,
+        'products': products_page, 
         'brands': brands,
         'categories': categories,
         'search_query': search_query,
+        'csrf_token': get_token(request),
     }
     return render(request, 'product_management.html', context)
 
-@csrf_protect
+
 def add_product(request):
     if request.method == 'POST':
         try:
-            # Получаем данные из формы
             product_id = request.POST.get('product_id')
             product_name = request.POST.get('product_name')
             brand_id = request.POST.get('brand_id')
             category_id = request.POST.get('category_id')
             
-            # Проверяем, существует ли уже такой ID
             if Product.objects.filter(ProductID=product_id).exists():
                 messages.error(request, f'Продукт с ID {product_id} уже существует!')
                 return redirect('store:product_management')
@@ -284,7 +291,6 @@ def add_product(request):
             brand = Brand.objects.get(id=brand_id)
             category = Category.objects.get(id=category_id)
             
-            # Создаем продукт
             Product.objects.create(
                 ProductID=product_id,
                 ProductName=product_name,
@@ -301,12 +307,11 @@ def add_product(request):
     
     return redirect('store:product_management')
 
-@csrf_protect
+
 def edit_product(request, product_id):
     if request.method == 'POST':
         try:
             product = get_object_or_404(Product, ProductID=product_id)
-            
             product.ProductName = request.POST.get('product_name')
             
             brand_id = request.POST.get('brand_id')
@@ -328,7 +333,7 @@ def edit_product(request, product_id):
     
     return redirect('store:product_management')
 
-@csrf_protect
+
 def delete_product(request, product_id):
     if request.method == 'POST':
         try:
