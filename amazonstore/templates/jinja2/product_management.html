@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление продуктами</title>
+    <link rel="stylesheet" href="{{ static('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ static('css/product_management.css') }}">
+</head>
+<body>
+    <div class="management-container">
+        <div class="header">
+            <h1>Управление продуктами</h1>
+            <a href="{{ url('store:index') }}" class="back-link">← Назад на главную</a>
+        </div>
+    
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% import "macros/pagination.html" as pager %}
+
+
+        <div class="section">
+            <h2>Поиск продуктов</h2>
+            <form method="get" class="search-form">
+                <input type="text" name="search" value="{{ search_query }}" 
+                       placeholder="Введите ID или название продукта..." class="search-input">
+                <button type="submit" class="search-btn">🔍 Поиск</button>
+                {% if search_query %}
+                <a href="/products/" class="btn" style="margin-left: 10px;">
+                    Сбросить поиск
+                </a>
+                {% endif %}
+            </form>
+        </div>
+        
+        <div class="section">
+            <h2>Добавить новый продукт</h2>
+            <form method="post" action="/products/add/">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="product_id">ID продукта:</label>
+                        <input type="text" id="product_id" name="product_id" 
+                               class="form-control small-input" required maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product_name">Название продукта:</label>
+                        <input type="text" id="product_name" name="product_name" 
+                               class="form-control medium-input" required maxlength="255">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="brand_id">Бренд:</label>
+                        <select id="brand_id" name="brand_id" class="form-control" required style="width: 200px;">
+                            <option value="">Выберите бренд...</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.BrandName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category_id">Категория:</label>
+                        <select id="category_id" name="category_id" class="form-control" required style="width: 200px;">
+                            <option value="">Выберите категорию...</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.CategoryName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">➕ Добавить</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="section">
+            <h2>Список продуктов ({{ products|length }})</h2>
+            
+            {% if products %}
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Бренд</th>
+                        <th>Категория</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.ProductID }}</td>
+                        <td>{{ product.ProductName }}</td>
+                        <td>{{ product.Brand.BrandName }}</td>
+                        <td>{{ product.Category.CategoryName }}</td>
+                        <td class="actions">
+                            <!-- Кнопка редактирования -->
+                            <button type="button" class="btn btn-warning" 
+                                    onclick="showEditForm('{{ product.ProductID }}', 
+                                                         '{{ product.ProductName }}', 
+                                                         '{{ product.Brand.id }}', 
+                                                         '{{ product.Category.id }}')">
+                                ✏️ Изменить
+                            </button>
+                            
+                            <!-- Форма удаления -->
+                            <form method="post" action="/products/delete/{{ product.ProductID }}/" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Удалить продукт {{ product.ProductName }}?');">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                <button type="submit" class="btn btn-danger">🗑️ Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {{ pager.render_pagination(products, 'page', {'search': search_query}) }}
+            {% else %}
+            <p style="text-align: center; padding: 20px; color: #7f8c8d;">
+                {% if search_query %}
+                Продукты не найдены
+                {% else %}
+                Нет продуктов в базе данных
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    
+        <div id="editModal" class="section" style="display: none;">
+            <h2>Редактировать продукт</h2>
+            <form id="editForm" method="post" action="">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="edit_product_name">Название продукта:</label>
+                        <input type="text" id="edit_product_name" name="product_name" 
+                               class="form-control medium-input" required maxlength="255">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_brand_id">Бренд:</label>
+                        <select id="edit_brand_id" name="brand_id" class="form-control" required style="width: 200px;">
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.BrandName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_category_id">Категория:</label>
+                        <select id="edit_category_id" name="category_id" class="form-control" required style="width: 200px;">
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.CategoryName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                        <button type="button" class="btn" onclick="hideEditForm()">❌ Отмена</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    
+        function showEditForm(productId, productName, brandId, categoryId) {
+            
+            document.getElementById('edit_product_name').value = productName;
+            document.getElementById('edit_brand_id').value = brandId;
+            document.getElementById('edit_category_id').value = categoryId;
+            document.getElementById('editForm').action = "/products/edit/" + productId + "/";
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('editModal').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideEditForm() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        setTimeout(function() {
+            var messages = document.querySelectorAll('.alert');
+            messages.forEach(function(message) {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.5s';
+                setTimeout(function() {
+                    message.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
