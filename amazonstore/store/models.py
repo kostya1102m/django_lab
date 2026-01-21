@@ -64,6 +64,17 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.ProductName} ({self.ProductID})"
 
+class ProductSeller(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, db_column='ProductID')
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE, db_column='SellerID')
+    IsActive = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'ProductSellers'
+        unique_together = ('product', 'seller')
+
+    def __str__(self):
+        return f"{self.product.ProductID} - {self.seller.SellerID}"
 
 class Order(models.Model):
     ORDER_STATUS_CHOICES = [
