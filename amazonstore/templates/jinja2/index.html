@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Analytics</title>
+    <link rel="stylesheet" href="{{ static('css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Amazon Analytics Dashboard</h1>
+
+        {% import "macros/tables.html" as tables %}
+        {% import "macros/pagination.html" as pager %}
+
+        <div class="stats-container">
+            {{ tables.render_stat_card("Total Customers", total_customers, "Active accounts") }}
+            {{ tables.render_stat_card("Total Sellers", total_sellers, "Registered sellers") }}
+            {{ tables.render_stat_card("Total Products", total_products, "Available items") }}
+            {{ tables.render_stat_card("Total Orders", total_orders, "All time orders") }}
+            {{ tables.render_stat_card("Total Revenue", "" ~ total_revenue, "Gross sales") }}
+            {{ tables.render_stat_card("Avg Order Value", "" ~ order_stats.avg_order_value, "Per order average") }}
+        </div>
+
+        
+        <div id="customers">
+            {{ tables.render_table(
+                "Customers",
+                ["ID", "Name", "City", "Country"],
+                customers_data.rows
+            ) }}
+            {{ pager.render_pagination(customers_data.page_obj, "page_customers", customers_data.extra_params) }}
+        </div>
+
+        <hr>
+
+       
+        <div id="orders">
+            {{ tables.render_table(
+                "Orders",
+                ["Order ID", "Date", "Customer", "Status", "Amount"],
+                orders_data.rows
+            ) }}
+            {{ pager.render_pagination(orders_data.page_obj, "page_orders", orders_data.extra_params) }}
+        </div>
+
+        <hr>
+
+       
+        <div id="products">
+            {{ tables.render_table(
+                "Products",
+                ["Product ID", "Name", "Brand", "Category"],
+                products_data.rows
+            ) }}
+            {{ pager.render_pagination(products_data.page_obj, "page_products", products_data.extra_params) }}
+        </div>
+
+        <hr>
+
+        
+        <div id="sellers">
+            {{ tables.render_table(
+                "Sellers",
+                ["Seller ID", "Name"],
+                sellers_data.rows
+            ) }}
+            {{ pager.render_pagination(sellers_data.page_obj, "page_sellers", sellers_data.extra_params) }}
+        </div>
+
+        <hr>
+
+
+        
+        {{ tables.render_table(
+            "Order Status Distribution",
+            ["Status", "Count", "Total Amount"],
+            status_stats.rows
+        ) }}
+
+        
+        {{ tables.render_table(
+            "Payment Method Distribution",
+            ["Payment Method", "Count", "Total Amount"],
+            payment_stats.rows
+        ) }}
+
+       
+        {{ tables.render_table(
+            "Top 10 Products by Quantity",
+            ["Product", "Quantity Sold", "Revenue"],
+            top_products.rows
+        ) }}
+
+        
+        {{ tables.render_table(
+            "Top 10 Customers by Spending",
+            ["Customer", "Country", "Orders", "Total Spent"],
+            top_customers.rows
+        ) }}
+
+
+        {{ tables.render_table(
+            "Monthly Sales (Last 6 Months)",
+            ["Month", "Orders", "Revenue"],
+            monthly_sales.rows
+        ) }}
+
+        <footer>
+            <p>Amazon Analytics Dashboard</p>
+        </footer>
+    </div>
+</body>
+</html>

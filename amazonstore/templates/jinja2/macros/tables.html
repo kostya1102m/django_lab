@@ -1,0 +1,41 @@
+{% macro render_table(title, headers, rows) %}
+<div class="table-section">
+    <h2>{{ title }}</h2>
+    <table>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if rows %}
+                {% for row in rows %}
+                    <tr>
+                        {% for cell in row %}
+                            <td>{{ cell|safe if cell is string and '<' in cell else cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="{{ headers|length }}" style="text-align: center; padding: 20px;">
+                        No data available
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{% macro render_stat_card(title, value, subtext="") %}
+<div class="stat-card">
+    <h3>{{ title }}</h3>
+    <div class="value">{{ value }}</div>
+    {% if subtext %}
+        <div class="subtext">{{ subtext }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
