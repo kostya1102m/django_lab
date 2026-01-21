@@ -35,6 +35,41 @@
             max-height: 400px;
             overflow-y: auto;
         }
+        .pagination-nav {
+            margin-top: 10px;
+        }
+        .pagination .page-link {
+            color: #4e73df;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .badge-delivered {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-pending {
+            background-color: #ffc107;
+            color: black;
+        }
+        .badge-shipped {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .badge-cancelled {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-returned {
+            background-color: #6c757d;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -48,6 +83,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Total Customers</h5>
                         <h2>{{ total_customers }}</h2>
+                        <small>Showing {{ customers|length }} of {{ total_customers }}</small>
                     </div>
                 </div>
             </div>
@@ -56,6 +92,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Total Sellers</h5>
                         <h2>{{ total_sellers }}</h2>
+                        <small>Showing {{ sellers|length }} of {{ total_sellers }}</small>
                     </div>
                 </div>
             </div>
@@ -64,6 +101,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Total Products</h5>
                         <h2>{{ total_products }}</h2>
+                        <small>Showing {{ products|length }} of {{ total_products }}</small>
                     </div>
                 </div>
             </div>
@@ -72,6 +110,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Total Orders</h5>
                         <h2>{{ total_orders }}</h2>
+                        <small>Showing {{ orders|length }} of {{ total_orders }}</small>
                     </div>
                 </div>
             </div>
@@ -107,17 +146,19 @@
 
         <!-- Customers Table -->
         <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Customers (First 50)</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Customers</h5>
+                <span class="badge bg-secondary">{{ customers_paginator.count }} total</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>City</th>
+                                <th>State</th>
                                 <th>Country</th>
                             </tr>
                         </thead>
@@ -127,29 +168,87 @@
                                 <td>{{ customer.CustomerID }}</td>
                                 <td>{{ customer.CustomerName }}</td>
                                 <td>{{ customer.City }}</td>
+                                <td>{{ customer.State }}</td>
                                 <td>{{ customer.Country }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No customers found</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Пагинация для Customers -->
+                {% if customers_paginator.num_pages > 1 %}
+                <nav class="pagination-nav" aria-label="Customers pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if customers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_customers=1{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="First">
+                                &laquo;&laquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_customers={{ customers.previous_page_number }}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Previous">
+                                &laquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in customers_paginator.page_range %}
+                            {% if customers.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page_customers={{ num }}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if customers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_customers={{ customers.next_page_number }}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Next">
+                                &raquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_customers={{ customers_paginator.num_pages }}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Last">
+                                &raquo;&raquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-center text-muted">
+                        Page {{ customers.number }} of {{ customers_paginator.num_pages }}
+                        ({{ items_per_page }} customers per page)
+                    </p>
+                </nav>
+                {% endif %}
             </div>
         </div>
 
         <!-- Orders Table -->
         <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Orders (First 50)</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Orders</h5>
+                <span class="badge bg-secondary">{{ orders_paginator.count }} total</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>Order ID</th>
                                 <th>Date</th>
                                 <th>Customer</th>
                                 <th>Status</th>
+                                <th>Payment Method</th>
                                 <th>Amount</th>
                             </tr>
                         </thead>
@@ -159,24 +258,90 @@
                                 <td>{{ order.OrderID }}</td>
                                 <td>{{ order.OrderDate }}</td>
                                 <td>{{ order.customer.CustomerName }}</td>
-                                <td>{{ order.OrderStatus }}</td>
-                                <td>${{ order.TotalAmount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge-status 
+                                        {% if order.OrderStatus == 'Delivered' %}badge-delivered
+                                        {% elif order.OrderStatus == 'Pending' %}badge-pending
+                                        {% elif order.OrderStatus == 'Shipped' %}badge-shipped
+                                        {% elif order.OrderStatus == 'Cancelled' %}badge-cancelled
+                                        {% else %}badge-returned{% endif %}">
+                                        {{ order.OrderStatus }}
+                                    </span>
+                                </td>
+                                <td>{{ order.PaymentMethod }}</td>
+                                <td class="text-end">${{ order.TotalAmount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No orders found</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Пагинация для Orders -->
+                {% if orders_paginator.num_pages > 1 %}
+                <nav class="pagination-nav" aria-label="Orders pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if orders.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_orders=1{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="First">
+                                &laquo;&laquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_orders={{ orders.previous_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Previous">
+                                &laquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in orders_paginator.page_range %}
+                            {% if orders.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page_orders={{ num }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if orders.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_orders={{ orders.next_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Next">
+                                &raquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_orders={{ orders_paginator.num_pages }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Last">
+                                &raquo;&raquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-center text-muted">
+                        Page {{ orders.number }} of {{ orders_paginator.num_pages }}
+                        ({{ items_per_page }} orders per page)
+                    </p>
+                </nav>
+                {% endif %}
             </div>
         </div>
 
         <!-- Products Table -->
         <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Products (First 50)</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Products</h5>
+                <span class="badge bg-secondary">{{ products_paginator.count }} total</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>Product ID</th>
@@ -193,14 +358,152 @@
                                 <td>{{ product.Brand.BrandName }}</td>
                                 <td>{{ product.Category.CategoryName }}</td>
                             </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No products found</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Пагинация для Products -->
+                {% if products_paginator.num_pages > 1 %}
+                <nav class="pagination-nav" aria-label="Products pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if products.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_products=1{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="First">
+                                &laquo;&laquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_products={{ products.previous_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Previous">
+                                &laquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in products_paginator.page_range %}
+                            {% if products.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page_products={{ num }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_products={{ products.next_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Next">
+                                &raquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_products={{ products_paginator.num_pages }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_sellers != '1' %}&page_sellers={{ current_page_sellers }}{% endif %}" title="Last">
+                                &raquo;&raquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-center text-muted">
+                        Page {{ products.number }} of {{ products_paginator.num_pages }}
+                        ({{ items_per_page }} products per page)
+                    </p>
+                </nav>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Statistics -->
+        <!-- Sellers Table -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Sellers</h5>
+                <span class="badge bg-secondary">{{ sellers_paginator.count }} total</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Seller ID</th>
+                                <th>Seller Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for seller in sellers %}
+                            <tr>
+                                <td>{{ seller.SellerID }}</td>
+                                <td>{{ seller.SellerName|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center">No sellers found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Пагинация для Sellers -->
+                {% if sellers_paginator.num_pages > 1 %}
+                <nav class="pagination-nav" aria-label="Sellers pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if sellers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_sellers=1{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}" title="First">
+                                &laquo;&laquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_sellers={{ sellers.previous_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}" title="Previous">
+                                &laquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in sellers_paginator.page_range %}
+                            {% if sellers.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > sellers.number|add:'-3' and num < sellers.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page_sellers={{ num }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if sellers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page_sellers={{ sellers.next_page_number }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}" title="Next">
+                                &raquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page_sellers={{ sellers_paginator.num_pages }}{% if current_page_customers != '1' %}&page_customers={{ current_page_customers }}{% endif %}{% if current_page_orders != '1' %}&page_orders={{ current_page_orders }}{% endif %}{% if current_page_products != '1' %}&page_products={{ current_page_products }}{% endif %}" title="Last">
+                                &raquo;&raquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-center text-muted">
+                        Page {{ sellers.number }} of {{ sellers_paginator.num_pages }}
+                        ({{ items_per_page }} sellers per page)
+                    </p>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
         <div class="row">
             <!-- Order Status Distribution -->
             <div class="col-md-6 mb-4">
@@ -215,14 +518,25 @@
                                     <th>Status</th>
                                     <th>Count</th>
                                     <th>Total Amount</th>
+                                    <th>% of Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for stat in status_stats %}
                                 <tr>
-                                    <td>{{ stat.OrderStatus }}</td>
+                                    <td>
+                                        <span class="badge-status 
+                                            {% if stat.OrderStatus == 'Delivered' %}badge-delivered
+                                            {% elif stat.OrderStatus == 'Pending' %}badge-pending
+                                            {% elif stat.OrderStatus == 'Shipped' %}badge-shipped
+                                            {% elif stat.OrderStatus == 'Cancelled' %}badge-cancelled
+                                            {% else %}badge-returned{% endif %}">
+                                            {{ stat.OrderStatus }}
+                                        </span>
+                                    </td>
                                     <td>{{ stat.count }}</td>
                                     <td>${{ stat.total|floatformat:2 }}</td>
+                                    <td>{{ stat.count|floatformat:1 }}%</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -270,6 +584,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Product</th>
                             <th>Quantity Sold</th>
                             <th>Revenue</th>
@@ -278,6 +593,7 @@
                     <tbody>
                         {% for product in top_products %}
                         <tr>
+                            <td>{{ forloop.counter }}</td>
                             <td>{{ product.product__ProductName }}</td>
                             <td>{{ product.total_quantity }}</td>
                             <td>${{ product.total_revenue|floatformat:2 }}</td>
@@ -290,5 +606,36 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Функция для сохранения позиции скролла
+    function saveScrollPosition() {
+        sessionStorage.setItem('scrollPosition', window.pageYOffset);
+    }
+    
+    // Функция для восстановления позиции скролла
+    function restoreScrollPosition() {
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition) {
+            window.scrollTo(0, parseInt(scrollPosition));
+            sessionStorage.removeItem('scrollPosition');
+        }
+    }
+    
+    // Сохраняем позицию при клике на ссылку пагинации
+    document.addEventListener('DOMContentLoaded', function() {
+        const paginationLinks = document.querySelectorAll('.pagination a.page-link');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', saveScrollPosition);
+        });
+        
+        // Восстанавливаем позицию при загрузке страницы
+        restoreScrollPosition();
+    });
+    
+    // Сохраняем позицию при отправке формы (если добавим фильтры позже)
+    document.addEventListener('submit', function() {
+        saveScrollPosition();
+    });
+</script>
 </body>
 </html>
