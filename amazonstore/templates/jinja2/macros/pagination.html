@@ -1,8 +1,10 @@
 {% macro render_pagination(page_obj, param_name, extra_params={}) %}
 <div class="pagination">
     {% if page_obj.number > 1 %}
-        {% set prev_params = extra_params.copy() %}
-        {% do prev_params.update({param_name: page_obj.number - 1}) %}
+        {% set prev_page = page_obj.number - 1 %}
+        {% set prev_params = {} %}
+        {% set _ = prev_params.update(extra_params) %}
+        {% set _ = prev_params.update({param_name: prev_page}) %}
         <a href="?{{ prev_params|urlencode }}">⬅ Previous</a>
     {% else %}
         <span class="disabled">⬅ Previous</span>
@@ -11,8 +13,10 @@
     <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     
     {% if page_obj.number < page_obj.paginator.num_pages %}
-        {% set next_params = extra_params.copy() %}
-        {% do next_params.update({param_name: page_obj.number + 1}) %}
+        {% set next_page = page_obj.number + 1 %}
+        {% set next_params = {} %}
+        {% set _ = next_params.update(extra_params) %}
+        {% set _ = next_params.update({param_name: next_page}) %}
         <a href="?{{ next_params|urlencode }}">Next ➡</a>
     {% else %}
         <span class="disabled">Next ➡</span>
