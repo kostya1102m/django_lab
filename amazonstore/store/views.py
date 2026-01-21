@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum, Avg, Max, Min
+from django.db.models import Count, Sum, Avg, Max, Min, Q
 from django.db.models.functions import TruncMonth
 from datetime import datetime
 from .models import (
     Customer, Seller, Brand, Category, Product, 
     ProductSeller, Order, OrderItem
 )
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 
 
 def format_currency(value):
@@ -237,3 +239,107 @@ def index(request):
     }
     
     return render(request, 'index.html', context)
+
+
+def product_management(request):
+    search_query = request.GET.get('search', '')
+    
+    # Поиск по названию или ID продукта
+    if search_query:
+        products = Product.objects.filter(
+            Q(ProductName__icontains=search_query) | 
+            Q(ProductID__icontains=search_query)
+        ).select_related('Brand', 'Category')
+    else:
+        products = Product.objects.all().select_related('Brand', 'Category')
+    
+    
+    brands = Brand.objects.all()
+    categories = Category.objects.all()
+    
+    context = {
+        'products': products,
+        'brands': brands,
+        'categories': categories,
+        'search_query': search_query,
+    }
+    return render(request, 'product_management.html', context)
+
+
+def add_product(request):
+    if request.method == 'POST':
+        try:
+            # Получаем данные из формы
+            product_id = request.POST.get('product_id')
+            product_name = request.POST.get('product_name')
+            brand_id = request.POST.get('brand_id')
+            category_id = request.POST.get('category_id')
+            
+            # Проверяем, существует ли уже такой ID
+            if Product.objects.filter(ProductID=product_id).exists():
+                messages.error(request, f'Продукт с ID {product_id} уже существует!')
+                return redirect('store:product_management')
+            
+            brand = Brand.objects.get(id=brand_id)
+            category = Category.objects.get(id=category_id)
+            
+            # Создаем продукт
+            Product.objects.create(
+                ProductID=product_id,
+                ProductName=product_name,
+                Brand=brand,
+                Category=category
+            )
+            
+            messages.success(request, f'Продукт {product_name} успешно добавлен!')
+            
+        except Exception as e:
+            messages.error(request, f'Ошибка при добавлении продукта: {str(e)}')
+        
+        return redirect('store:product_management')
+    
+    return redirect('store:product_management')
+
+
+def edit_product(request, product_id):
+    if request.method == 'POST':
+        try:
+            product = get_object_or_404(Product, ProductID=product_id)
+            
+            product.ProductName = request.POST.get('product_name')
+            
+            brand_id = request.POST.get('brand_id')
+            category_id = request.POST.get('category_id')
+            
+            if brand_id:
+                product.Brand = Brand.objects.get(id=brand_id)
+            if category_id:
+                product.Category = Category.objects.get(id=category_id)
+            
+            product.save()
+            
+            messages.success(request, f'Продукт {product.ProductName} успешно обновлен!')
+            
+        except Exception as e:
+            messages.error(request, f'Ошибка при редактировании: {str(e)}')
+        
+        return redirect('store:product_management')
+    
+    return redirect('store:product_management')
+
+
+def delete_product(request, product_id):
+    if request.method == 'POST':
+        try:
+            product = get_object_or_404(Product, ProductID=product_id)
+            product_name = product.ProductName
+            product.delete()
+            
+            messages.success(request, f'Продукт {product_name} успешно удален!')
+            
+        except Exception as e:
+            messages.error(request, f'Ошибка при удалении: {str(e)}')
+        
+        return redirect('store:product_management')
+    
+    return redirect('store:product_management')
